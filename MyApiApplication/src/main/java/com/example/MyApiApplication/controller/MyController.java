@@ -14,4 +14,9 @@ public class MyController {
     public String sayHello(){
         return "Hello, World!";
     }
+
+    @GetMapping("/bye")
+    public String sayHello(){
+        return "Good Bye!";
+    }
 }

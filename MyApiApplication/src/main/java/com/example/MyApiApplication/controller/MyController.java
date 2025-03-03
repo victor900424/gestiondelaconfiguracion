@@ -16,7 +16,7 @@ public class MyController {
     }
 
     @GetMapping("/bye")
-    public String sayHello(){
+    public String sayBye(){
         return "Good Bye!";
     }
 }

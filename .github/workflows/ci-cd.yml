@@ -13,50 +13,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0  # Asegura que se obtenga todo el historial del repo
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: List directory contents
-      run: ls -la  # Verifica la estructura del directorio
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: maven
 
-    - name: Move to project directory
-      run: cd /MyApiApplication && ls -la  # Confirma que el pom.xml está ahí
+      - name: Build with Maven
+        working-directory: MyApiApplication
+        run: mvn clean package
 
-    - name: Set up JDK 23
-      uses: actions/setup-java@v1
-      with:
-        java-version: '23'
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
 
-    - name: Build with Maven
-      run: mvn -B clean package
-      working-directory: /MyApiApplication  # Ejecuta Maven dentro del proyecto
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Run Unit Tests
-      run: mvn test
-      working-directory: /MyApiApplication
+      - name: Build Docker image
+        working-directory: MyApiApplication
+        run: |
+          docker build -t myapi:latest .
 
-    - name: Run Functional Tests
-      run: mvn verify
-      working-directory: /MyApiApplication
-
-    - name: Login to Docker Hub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
-    - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/MyApiApplication:latest .
-      working-directory: gestiondelaconfiguracion/MyApiApplication
-    
-    - name: Push Docker image
-      run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/MyApiApplication:latest
-
-    - name: Create Git Tag
-      id: tag
-      run: echo "tag=$(echo ${GITHUB_REF##*/}-$(date +%Y%m%d%H%M%S))" >> $GITHUB_ENV
-
-    - name: Push Git Tag
-      run: git tag ${{ env.tag }} && git push origin ${{ env.tag }}
+      - name: Run Docker container
+        run: docker run -d -p 8080:8080 myapi:latest

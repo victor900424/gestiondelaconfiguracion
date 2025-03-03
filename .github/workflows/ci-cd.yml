@@ -16,12 +16,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: maven
+
+      - name: Verify Java version
+        run: java -version
 
       - name: Build with Maven
         working-directory: MyApiApplication
@@ -37,8 +40,7 @@ jobs:
 
       - name: Build Docker image
         working-directory: MyApiApplication
-        run: |
-          docker build -t myapi:latest .
+        run: docker build -t myapi:latest .
 
       - name: Run Docker container
         run: docker run -d -p 8080:8080 myapi:latest
